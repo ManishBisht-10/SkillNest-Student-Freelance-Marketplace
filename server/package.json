@@ -5,8 +5,8 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "dev": "C:\\Progra~1\\nodejs\\node.exe ./node_modules/nodemon/bin/nodemon.js --exec C:\\Progra~1\\nodejs\\node.exe src/server.js",
+    "start": "C:\\Progra~1\\nodejs\\node.exe src/server.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -19,6 +19,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
+    "express-validator": "^7.2.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.4",

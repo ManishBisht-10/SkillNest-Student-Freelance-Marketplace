@@ -9,4 +9,6 @@ export { default as Notification } from "./Notification.model.js";
 export { default as ChatRoom } from "./ChatRoom.model.js";
 export { default as Message } from "./Message.model.js";
 export { default as Transaction } from "./Transaction.model.js";
+export { default as OtpCode } from "./OtpCode.model.js";
+export { default as RefreshToken } from "./RefreshToken.model.js";
 

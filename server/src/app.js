@@ -5,6 +5,8 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import authRoutes from "./routes/auth.routes.js";
+import errorHandler from "./middlewares/errorHandler.js";
 
 dotenv.config();
 
@@ -36,15 +38,14 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "skillnest-api" });
 });
 
-// API v1 base router placeholder
-app.use("/api/v1", (req, res) => {
-  res.status(200).json({ message: "SkillNest API v1 is up." });
-});
+app.use("/api/v1/auth", authRoutes);
 
 // Global 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
+app.use(errorHandler);
 
 export default app;
 
