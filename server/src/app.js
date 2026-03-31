@@ -6,7 +6,9 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
+import usersRoutes from "./routes/users.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import path from "path";
 
 dotenv.config();
 
@@ -39,6 +41,14 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", usersRoutes);
+
+// Serve locally uploaded files when Cloudinary keys are not configured.
+// (Cloudinary uploads are handled separately in `cloudinary.service.js`.)
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"))
+);
 
 // Global 404 handler
 app.use((req, res) => {

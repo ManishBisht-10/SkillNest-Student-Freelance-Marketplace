@@ -2,6 +2,9 @@ node_modules/
 client/node_modules/
 server/node_modules/
 
+# Local uploaded files (avatar fallback)
+server/uploads/
+
 # Local environment files
 .env
 server/.env
