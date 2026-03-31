@@ -1,18 +1,28 @@
 import http from "http";
 import dotenv from "dotenv";
 import app from "./app.js";
+import { connectMongo } from "./db/connectMongo.js";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
-const server = http.createServer(app);
+async function start() {
+  await connectMongo();
 
-// Socket.IO will be wired here in a later step
-// and live under src/socket/index.js
+  const server = http.createServer(app);
 
-server.listen(PORT, () => {
+  // Socket.IO will be wired here in a later step
+  // and live under src/socket/index.js
+  server.listen(PORT, () => {
+    // eslint-disable-next-line no-console
+    console.log(`SkillNest API server running on port ${PORT}`);
+  });
+}
+
+start().catch((err) => {
   // eslint-disable-next-line no-console
-  console.log(`SkillNest API server running on port ${PORT}`);
+  console.error("[SkillNest] Server failed to start:", err);
+  process.exit(1);
 });
 
