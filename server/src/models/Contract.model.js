@@ -36,6 +36,8 @@ const ContractSchema = new Schema(
       default: "held",
       index: true,
     },
+    /** Set when student calls `PUT /contracts/:id/complete` (awaiting consumer approval). */
+    completionSubmittedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
