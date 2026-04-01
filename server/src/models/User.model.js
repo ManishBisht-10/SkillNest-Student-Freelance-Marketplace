@@ -22,6 +22,7 @@ const UserSchema = new Schema(
     avatar: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    isBanned: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );

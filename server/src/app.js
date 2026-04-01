@@ -13,6 +13,7 @@ import contractsRoutes from "./routes/contracts.routes.js";
 import paymentsRoutes from "./routes/payments.routes.js";
 import reviewsRoutes from "./routes/reviews.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import path from "path";
 
@@ -61,6 +62,7 @@ app.use("/api/v1/contracts", contractsRoutes);
 app.use("/api/v1/payments", paymentsRoutes);
 app.use("/api/v1/reviews", reviewsRoutes);
 app.use("/api/v1/notifications", notificationsRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // Serve locally uploaded files when Cloudinary keys are not configured.
 // (Cloudinary uploads are handled separately in `cloudinary.service.js`.)

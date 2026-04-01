@@ -140,6 +140,9 @@ export const login = asyncHandler(async (req, res) => {
   if (!user || !user.isActive) {
     throw new ApiError(401, "Invalid email or password");
   }
+  if (user.isBanned) {
+    throw new ApiError(403, "Account suspended");
+  }
   if (!user.isVerified) {
     throw new ApiError(401, "Email not verified");
   }
@@ -167,6 +170,9 @@ export const refreshToken = asyncHandler(async (req, res) => {
 
   const user = await User.findById(userId);
   if (!user) throw new ApiError(401, "Invalid refresh token");
+  if (!user.isActive || user.isBanned) {
+    throw new ApiError(403, "Account suspended or inactive");
+  }
 
   const tokenHash = sha256(refreshToken);
   const stored = await RefreshToken.findOne({

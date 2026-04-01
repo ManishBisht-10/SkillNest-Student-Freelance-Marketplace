@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
+import User from "../models/User.model.js";
 
-export function verifyToken(req, res, next) {
+export async function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization || "";
   const bearer =
     typeof authHeader === "string" && authHeader.startsWith("Bearer ")
@@ -15,12 +16,20 @@ export function verifyToken(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(payload.sub).select("role isActive isBanned");
+    if (!user) {
+      return next(new ApiError(401, "Invalid or expired token"));
+    }
+    if (!user.isActive || user.isBanned) {
+      return next(new ApiError(403, "Account suspended or inactive"));
+    }
     req.user = {
       id: payload.sub,
-      role: payload.role,
+      role: user.role,
     };
     return next();
   } catch (err) {
+    if (err instanceof ApiError) return next(err);
     return next(new ApiError(401, "Invalid or expired token"));
   }
 }
@@ -35,4 +44,3 @@ export function checkRole(...allowedRoles) {
     return next();
   };
 }
-
