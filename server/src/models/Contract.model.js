@@ -32,10 +32,12 @@ const ContractSchema = new Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["held", "released", "refunded"],
-      default: "held",
+      enum: ["pending", "held", "released", "refunded"],
+      default: "pending",
       index: true,
     },
+    /** Latest Razorpay order id for escrow payment (initiate). */
+    razorpayOrderId: { type: String, default: "" },
     /** Set when student calls `PUT /contracts/:id/complete` (awaiting consumer approval). */
     completionSubmittedAt: { type: Date, default: null },
   },

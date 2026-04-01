@@ -10,6 +10,7 @@ import usersRoutes from "./routes/users.routes.js";
 import jobsRoutes from "./routes/jobs.routes.js";
 import bidsRoutes from "./routes/bids.routes.js";
 import contractsRoutes from "./routes/contracts.routes.js";
+import paymentsRoutes from "./routes/payments.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import path from "path";
 
@@ -25,7 +26,14 @@ app.use(
   })
 );
 app.use(helmet());
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
@@ -48,6 +56,7 @@ app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/jobs", jobsRoutes);
 app.use("/api/v1/bids", bidsRoutes);
 app.use("/api/v1/contracts", contractsRoutes);
+app.use("/api/v1/payments", paymentsRoutes);
 
 // Serve locally uploaded files when Cloudinary keys are not configured.
 // (Cloudinary uploads are handled separately in `cloudinary.service.js`.)

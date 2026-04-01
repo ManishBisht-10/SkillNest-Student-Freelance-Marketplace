@@ -3,6 +3,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import Contract from "../models/Contract.model.js";
 import Job from "../models/Job.model.js";
 import Notification from "../models/Notification.model.js";
+import Transaction from "../models/Transaction.model.js";
+import { netAmountAfterPlatformFee } from "../services/payments.service.js";
 
 function isParticipant(contract, userId) {
   const uid = String(userId);
@@ -121,9 +123,29 @@ export const approveContract = asyncHandler(async (req, res) => {
   if (!contract.completionSubmittedAt) {
     throw new ApiError(400, "Student has not submitted completion yet");
   }
+  if (contract.paymentStatus !== "held") {
+    throw new ApiError(
+      400,
+      "Escrow payment must be completed before approval (consumer must pay first)"
+    );
+  }
+
+  const existingRelease = await Transaction.findOne({
+    contractId: contract._id,
+    type: "release",
+  });
+  if (!existingRelease) {
+    const net = netAmountAfterPlatformFee(contract.agreedAmount);
+    await Transaction.create({
+      contractId: contract._id,
+      amount: net,
+      type: "release",
+      paymentGatewayId: "",
+      status: "completed",
+    });
+  }
 
   contract.status = "completed";
-  // Escrow release — full payment integration in Step 8
   contract.paymentStatus = "released";
   await contract.save();
 

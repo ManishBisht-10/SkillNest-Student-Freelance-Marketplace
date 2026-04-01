@@ -130,7 +130,7 @@ export const acceptBid = asyncHandler(async (req, res) => {
       endDate,
       milestones: [],
       status: "active",
-      paymentStatus: "held",
+      paymentStatus: "pending",
     });
   } catch (err) {
     // If contract already exists due to race, return it
