@@ -26,6 +26,7 @@ export const activateUserValidator = [
 
 export const listUsersQueryValidator = [
   query("role").optional().isIn(["admin", "student", "consumer"]),
+  query("status").optional().isIn(["active", "inactive", "banned"]),
   query("q").optional().isString().trim().isLength({ max: 200 }),
 ];
 

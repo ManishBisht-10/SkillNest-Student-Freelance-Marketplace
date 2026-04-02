@@ -16,6 +16,13 @@ export default function errorHandler(err, req, res, next) {
     return res.status(400).json({ message: "Invalid avatar file type" });
   }
 
+  if (
+    typeof err?.message === "string" &&
+    err.message.toLowerCase().includes("invalid chat attachment type")
+  ) {
+    return res.status(400).json({ message: "Invalid chat attachment type" });
+  }
+
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       message: err.message,

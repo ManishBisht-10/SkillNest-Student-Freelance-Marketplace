@@ -24,6 +24,9 @@ const router = express.Router();
 router.post("/", verifyToken, createJobValidator, validateRequest, createJob);
 
 router.get("/", verifyToken, listJobsValidator, validateRequest, listJobs);
+router.get("/my/posted", verifyToken, getMyPostedJobs);
+router.get("/my/assigned", verifyToken, getMyAssignedJobs);
+
 router.get("/:id", verifyToken, jobIdParamValidator, validateRequest, getJobById);
 
 router.put(
@@ -41,9 +44,6 @@ router.delete(
   validateRequest,
   cancelJob
 );
-
-router.get("/my/posted", verifyToken, getMyPostedJobs);
-router.get("/my/assigned", verifyToken, getMyAssignedJobs);
 
 export default router;
 

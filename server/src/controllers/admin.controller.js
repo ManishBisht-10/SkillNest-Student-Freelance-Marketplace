@@ -59,9 +59,19 @@ export const getDashboard = asyncHandler(async (req, res) => {
 });
 
 export const listUsers = asyncHandler(async (req, res) => {
-  const { role, q } = req.query;
+  const { role, status, q } = req.query;
   const filter = {};
   if (role) filter.role = role;
+  if (status === "active") {
+    filter.isActive = true;
+    filter.isBanned = false;
+  }
+  if (status === "inactive") {
+    filter.isActive = false;
+  }
+  if (status === "banned") {
+    filter.isBanned = true;
+  }
   if (q) {
     filter.$or = [
       { name: new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") },

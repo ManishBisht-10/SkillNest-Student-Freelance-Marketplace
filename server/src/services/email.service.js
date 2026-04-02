@@ -10,12 +10,14 @@ function smtpConfigured() {
 }
 
 export async function sendOtpEmail({ to, code, purpose }) {
+  const devLogOtp = () => {
+    // eslint-disable-next-line no-console
+    console.log(`[SkillNest][DEV] OTP for ${purpose} to ${to}: ${code}`);
+  };
+
   // In local dev without SMTP, log the OTP for you to copy.
   if (!smtpConfigured()) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `[SkillNest][DEV] OTP for ${purpose} to ${to}: ${code}`
-    );
+    devLogOtp();
     return;
   }
 
@@ -38,11 +40,22 @@ export async function sendOtpEmail({ to, code, purpose }) {
     `Your OTP is: ${code}\n\n` +
     `This code will expire shortly.`;
 
-  await transport.sendMail({
-    from: process.env.SMTP_USER,
-    to,
-    subject,
-    text,
-  });
+  try {
+    await transport.sendMail({
+      from: process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+    });
+  } catch (error) {
+    // If SMTP is misconfigured or credentials are rejected, do not block auth.
+    // Fall back to console OTP logging so registration/password reset still works in dev.
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[SkillNest] SMTP send failed for ${purpose} to ${to}; falling back to dev log.`,
+      error?.message || error
+    );
+    devLogOtp();
+  }
 }
 

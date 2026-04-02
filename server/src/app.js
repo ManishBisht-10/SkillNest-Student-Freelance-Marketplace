@@ -14,6 +14,7 @@ import paymentsRoutes from "./routes/payments.routes.js";
 import reviewsRoutes from "./routes/reviews.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import path from "path";
 
@@ -21,10 +22,29 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = new Set([
+  process.env.CLIENT_URL || "http://localhost:5173",
+]);
+
 // Basic security & parsing middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin(origin, callback) {
+      // Allow non-browser clients (no Origin header).
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.has(origin)) return callback(null, true);
+
+      // Local development convenience: allow localhost origins on any port.
+      if (
+        process.env.NODE_ENV !== "production" &&
+        /^https?:\/\/localhost:\d+$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS origin not allowed"));
+    },
     credentials: true,
   })
 );
@@ -63,6 +83,7 @@ app.use("/api/v1/payments", paymentsRoutes);
 app.use("/api/v1/reviews", reviewsRoutes);
 app.use("/api/v1/notifications", notificationsRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/chat", chatRoutes);
 
 // Serve locally uploaded files when Cloudinary keys are not configured.
 // (Cloudinary uploads are handled separately in `cloudinary.service.js`.)

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,5 +12,44 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: radial-gradient(circle at 15% 20%, rgba(233, 69, 96, 0.15), transparent 35%),
+    radial-gradient(circle at 85% 0%, rgba(15, 52, 96, 0.9), transparent 40%),
+    #1a1a2e;
+  color: #eaeaea;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: fade-up 700ms ease-out forwards;
+}
+
+.animation-delay-1 {
+  animation-delay: 120ms;
+}
+
+.animation-delay-2 {
+  animation-delay: 240ms;
+}
+
+.animation-delay-3 {
+  animation-delay: 360ms;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 

@@ -5,6 +5,7 @@ import Bid from "../models/Bid.model.js";
 import Job from "../models/Job.model.js";
 import Contract from "../models/Contract.model.js";
 import ChatRoom from "../models/ChatRoom.model.js";
+import Notification from "../models/Notification.model.js";
 
 function addDays(date, days) {
   const d = new Date(date);
@@ -34,6 +35,14 @@ export const createBid = asyncHandler(async (req, res) => {
       bidAmount,
       deliveryDays,
     });
+
+    await Notification.create({
+      userId: job.postedBy,
+      message: `New bid received for job: ${job.title}`,
+      type: "bid",
+      link: `/consumer/jobs/${job._id}`,
+    });
+
     return res.status(201).json(bid);
   } catch (err) {
     if (err?.code === 11000) {
@@ -155,6 +164,13 @@ export const acceptBid = asyncHandler(async (req, res) => {
       throw err;
     }
   }
+
+  await Notification.create({
+    userId: bid.studentId,
+    message: `Your bid was accepted for job: ${job.title}`,
+    type: "bid",
+    link: `/student/contracts/${contract._id}`,
+  });
 
   return res.status(200).json({
     message: "Bid accepted",

@@ -26,7 +26,7 @@ export const refreshTokenValidator = [
 ];
 
 export const logoutValidator = [
-  body("refreshToken").isString().trim().notEmpty(),
+  body("refreshToken").optional().isString().trim().notEmpty(),
 ];
 
 export const forgotPasswordValidator = [
