@@ -3,13 +3,14 @@ import type {
   AuthSuccessResponse,
   ForgotPasswordInput,
   LoginInput,
+  OtpDispatchResponse,
   RegisterInput,
   ResetPasswordInput,
   VerifyOtpInput,
 } from "../../../shared/types/auth";
 
 export async function register(payload: RegisterInput) {
-  const { data } = await api.post<{ message: string }>("/auth/register", payload);
+  const { data } = await api.post<OtpDispatchResponse>("/auth/register", payload);
   return data;
 }
 
@@ -19,7 +20,7 @@ export async function verifyOtp(payload: VerifyOtpInput) {
 }
 
 export async function resendOtp(email: string) {
-  const { data } = await api.post<{ message: string }>("/auth/resend-otp", { email });
+  const { data } = await api.post<OtpDispatchResponse>("/auth/resend-otp", { email });
   return data;
 }
 
@@ -29,7 +30,7 @@ export async function login(payload: LoginInput) {
 }
 
 export async function forgotPassword(payload: ForgotPasswordInput) {
-  const { data } = await api.post<{ message: string }>("/auth/forgot-password", payload);
+  const { data } = await api.post<OtpDispatchResponse>("/auth/forgot-password", payload);
   return data;
 }
 

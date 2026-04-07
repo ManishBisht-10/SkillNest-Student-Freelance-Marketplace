@@ -15,6 +15,25 @@ import RefreshToken from "../models/RefreshToken.model.js";
 const OTP_EXPIRES_MS = 10 * 60 * 1000; // 10 minutes
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+async function issueVerificationOtp(user) {
+  await OtpCode.updateMany(
+    { email: user.email, purpose: "verify_email", usedAt: null },
+    { usedAt: new Date() }
+  );
+
+  const { code, codeHash } = await createOtpCode();
+  const otp = await OtpCode.create({
+    userId: user._id,
+    email: user.email,
+    purpose: "verify_email",
+    codeHash,
+    expiresAt: new Date(Date.now() + OTP_EXPIRES_MS),
+  });
+
+  const delivery = await sendOtpEmail({ to: user.email, code, purpose: otp.purpose });
+  return delivery;
+}
+
 async function issueTokensForUser(user) {
   const accessToken = signAccessToken(user);
 
@@ -36,12 +55,31 @@ export const register = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
   const existing = await User.findOne({ email });
-  if (existing) throw new ApiError(409, "Email already registered");
   if (role === "admin") {
     throw new ApiError(400, "Invalid role for signup");
   }
 
+  if (existing?.isVerified) {
+    throw new ApiError(409, "Email already registered");
+  }
+
   const passwordHash = await bcrypt.hash(password, 10);
+  if (existing && !existing.isVerified) {
+    existing.name = name;
+    existing.passwordHash = passwordHash;
+    existing.role = role;
+    existing.isActive = true;
+    existing.isBanned = false;
+    await existing.save();
+
+    const delivery = await issueVerificationOtp(existing);
+
+    return res.status(200).json({
+      message: "Account updated. OTP sent. Verify your email to continue.",
+      otpPreview: delivery?.otpPreview,
+    });
+  }
+
   const user = await User.create({
     name,
     email,
@@ -51,20 +89,11 @@ export const register = asyncHandler(async (req, res) => {
     isActive: true,
   });
 
-  // Create OTP for email verification
-  const { code, codeHash } = await createOtpCode();
-  const otp = await OtpCode.create({
-    userId: user._id,
-    email: user.email,
-    purpose: "verify_email",
-    codeHash,
-    expiresAt: new Date(Date.now() + OTP_EXPIRES_MS),
-  });
-
-  await sendOtpEmail({ to: user.email, code, purpose: otp.purpose });
+  const delivery = await issueVerificationOtp(user);
 
   return res.status(201).json({
     message: "OTP sent. Verify your email to continue.",
+    otpPreview: delivery?.otpPreview,
   });
 });
 
@@ -113,24 +142,12 @@ export const resendOtp = asyncHandler(async (req, res) => {
     return res.status(200).json({ message: "Email already verified" });
   }
 
-  // Invalidate previous unused OTPs
-  await OtpCode.updateMany(
-    { email, purpose: "verify_email", usedAt: null },
-    { usedAt: new Date() }
-  );
+  const delivery = await issueVerificationOtp(user);
 
-  const { code, codeHash } = await createOtpCode();
-  await OtpCode.create({
-    userId: user._id,
-    email: user.email,
-    purpose: "verify_email",
-    codeHash,
-    expiresAt: new Date(Date.now() + OTP_EXPIRES_MS),
+  return res.status(200).json({
+    message: "OTP resent. Verify to continue.",
+    otpPreview: delivery?.otpPreview,
   });
-
-  await sendOtpEmail({ to: user.email, code, purpose: "verify_email" });
-
-  return res.status(200).json({ message: "OTP resent. Verify to continue." });
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -252,9 +269,12 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     expiresAt: new Date(Date.now() + OTP_EXPIRES_MS),
   });
 
-  await sendOtpEmail({ to: user.email, code, purpose: "forgot_password" });
+  const delivery = await sendOtpEmail({ to: user.email, code, purpose: "forgot_password" });
 
-  return res.status(200).json({ message: "If account exists, OTP sent" });
+  return res.status(200).json({
+    message: "If account exists, OTP sent",
+    otpPreview: delivery?.otpPreview,
+  });
 });
 
 export const resetPassword = asyncHandler(async (req, res) => {

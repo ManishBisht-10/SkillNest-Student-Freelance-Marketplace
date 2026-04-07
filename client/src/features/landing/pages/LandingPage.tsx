@@ -3,6 +3,7 @@ import {
   CircleDollarSign,
   GraduationCap,
   Laptop,
+  Menu,
   MessageSquare,
   Rocket,
   ShieldCheck,
@@ -11,10 +12,13 @@ import {
   TrendingUp,
   UserRoundSearch,
   Wrench,
+  X,
 } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAppSelector } from "../../../app/hooks";
+import SkillNestLogo from "../../../shared/components/SkillNestLogo";
 import { selectAuth } from "../../auth/authSlice";
 
 const stats = [
@@ -129,6 +133,7 @@ const testimonials = [
 
 export default function LandingPage() {
   const { isAuthenticated, user } = useAppSelector(selectAuth);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const dashboardPath =
     user?.role === "student"
@@ -143,11 +148,9 @@ export default function LandingPage() {
     <div className="min-h-screen overflow-x-hidden bg-primary text-text">
       <header className="sticky top-0 z-30 border-b border-secondary/70 bg-primary/90 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-          <Link to="/" className="font-heading text-xl font-bold tracking-tight text-white">
-            SkillNest
-          </Link>
+          <SkillNestLogo />
 
-          <nav className="hidden items-center gap-5 text-sm text-text/75 md:flex">
+          <nav className="hidden items-center gap-5 text-sm text-text/75 lg:flex">
             <a href="#categories" className="transition hover:text-white">
               Categories
             </a>
@@ -160,9 +163,12 @@ export default function LandingPage() {
             <a href="#testimonials" className="transition hover:text-white">
               Testimonials
             </a>
+            <Link to="/register" className="transition hover:text-white">
+              Start Hiring
+            </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
             {!isAuthenticated ? (
               <>
                 <Link to="/login" className="rounded-xl border border-secondary px-4 py-2 text-sm font-semibold">
@@ -178,7 +184,88 @@ export default function LandingPage() {
               </Link>
             )}
           </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-xl border border-secondary p-2 text-text md:hidden"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {menuOpen ? (
+          <div className="border-t border-secondary/70 bg-primary/95 px-4 py-4 md:hidden">
+            <nav className="grid gap-2 text-sm">
+              <a
+                href="#categories"
+                className="rounded-lg px-3 py-2 text-text/90 transition hover:bg-white/10 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                Categories
+              </a>
+              <a
+                href="#how-it-works"
+                className="rounded-lg px-3 py-2 text-text/90 transition hover:bg-white/10 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                How It Works
+              </a>
+              <a
+                href="#students"
+                className="rounded-lg px-3 py-2 text-text/90 transition hover:bg-white/10 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                Students
+              </a>
+              <a
+                href="#testimonials"
+                className="rounded-lg px-3 py-2 text-text/90 transition hover:bg-white/10 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                Testimonials
+              </a>
+              <Link
+                to="/register"
+                className="rounded-lg px-3 py-2 text-text/90 transition hover:bg-white/10 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                Start Hiring
+              </Link>
+            </nav>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {!isAuthenticated ? (
+                <>
+                  <Link
+                    to="/login"
+                    className="rounded-xl border border-secondary px-4 py-2 text-center text-sm font-semibold"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="rounded-xl bg-accent px-4 py-2 text-center text-sm font-semibold text-white"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Join Now
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  to={dashboardPath}
+                  className="col-span-2 rounded-xl bg-accent px-4 py-2 text-center text-sm font-semibold text-white"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Go to Dashboard
+                </Link>
+              )}
+            </div>
+          </div>
+        ) : null}
       </header>
 
       <main>

@@ -19,8 +19,12 @@ export default function ForgotPasswordPage() {
     event.preventDefault();
 
     try {
-      await dispatch(forgotPasswordThunk({ email: email.trim().toLowerCase() })).unwrap();
-      toast.success("If your account exists, OTP has been sent");
+      const response = await dispatch(forgotPasswordThunk({ email: email.trim().toLowerCase() })).unwrap();
+      if (response.otpPreview) {
+        toast.success(`SMTP issue detected. Use OTP: ${response.otpPreview}`);
+      } else {
+        toast.success("If your account exists, OTP has been sent");
+      }
       navigate(`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}`);
     } catch {
       toast.error("Unable to process request");

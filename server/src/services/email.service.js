@@ -1,12 +1,26 @@
 import nodemailer from "nodemailer";
 
 function smtpConfigured() {
+  const smtpUser = String(process.env.SMTP_USER || "").trim();
+  const smtpPass = String(process.env.SMTP_PASS || "")
+    .trim()
+    .replace(/\s+/g, "");
+
+  const hasPlaceholderCreds =
+    smtpUser.toLowerCase() === "your_email@gmail.com" ||
+    smtpPass.toLowerCase() === "your_app_password";
+
   return Boolean(
     process.env.SMTP_HOST &&
       process.env.SMTP_PORT &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS
+      smtpUser &&
+      smtpPass &&
+      !hasPlaceholderCreds
   );
+}
+
+function canReturnOtpPreview() {
+  return process.env.NODE_ENV !== "production";
 }
 
 export async function sendOtpEmail({ to, code, purpose }) {
@@ -18,7 +32,11 @@ export async function sendOtpEmail({ to, code, purpose }) {
   // In local dev without SMTP, log the OTP for you to copy.
   if (!smtpConfigured()) {
     devLogOtp();
-    return;
+    return {
+      delivered: false,
+      reason: "smtp_not_configured",
+      otpPreview: canReturnOtpPreview() ? code : undefined,
+    };
   }
 
   const transport = nodemailer.createTransport({
@@ -27,7 +45,9 @@ export async function sendOtpEmail({ to, code, purpose }) {
     secure: Number(process.env.SMTP_PORT) === 465, // common convention
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass: String(process.env.SMTP_PASS || "")
+        .trim()
+        .replace(/\s+/g, ""),
     },
   });
 
@@ -42,11 +62,12 @@ export async function sendOtpEmail({ to, code, purpose }) {
 
   try {
     await transport.sendMail({
-      from: process.env.SMTP_USER,
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
       subject,
       text,
     });
+    return { delivered: true };
   } catch (error) {
     // If SMTP is misconfigured or credentials are rejected, do not block auth.
     // Fall back to console OTP logging so registration/password reset still works in dev.
@@ -56,6 +77,11 @@ export async function sendOtpEmail({ to, code, purpose }) {
       error?.message || error
     );
     devLogOtp();
+    return {
+      delivered: false,
+      reason: "smtp_send_failed",
+      otpPreview: canReturnOtpPreview() ? code : undefined,
+    };
   }
 }
 

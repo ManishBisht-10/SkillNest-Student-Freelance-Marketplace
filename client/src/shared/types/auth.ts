@@ -22,6 +22,11 @@ export interface VerifyOtpInput {
   otp: string;
 }
 
+export interface OtpDispatchResponse {
+  message: string;
+  otpPreview?: string;
+}
+
 export interface RegisterInput {
   name: string;
   email: string;

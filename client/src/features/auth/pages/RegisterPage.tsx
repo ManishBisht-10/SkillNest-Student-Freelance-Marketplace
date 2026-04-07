@@ -28,7 +28,7 @@ export default function RegisterPage() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      await dispatch(
+      const response = await dispatch(
         registerThunk({
           role,
           name: name.trim(),
@@ -38,7 +38,11 @@ export default function RegisterPage() {
       ).unwrap();
 
       dispatch(setPendingOtpEmail(email.trim().toLowerCase()));
-      toast.success("OTP sent to your email");
+      if (response.otpPreview) {
+        toast.success(`SMTP issue detected. Use OTP: ${response.otpPreview}`);
+      } else {
+        toast.success("OTP sent to your email");
+      }
       navigate("/verify-otp");
     } catch (error) {
       toast.error(getErrorMessage(error, "Registration failed. Please review your details."));

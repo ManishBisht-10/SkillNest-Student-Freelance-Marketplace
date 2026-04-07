@@ -44,9 +44,13 @@ export default function VerifyOtpPage() {
     }
 
     try {
-      await dispatch(resendOtpThunk(normalizedEmail)).unwrap();
+      const response = await dispatch(resendOtpThunk(normalizedEmail)).unwrap();
       dispatch(setPendingOtpEmail(normalizedEmail));
-      toast.success("OTP resent");
+      if (response.otpPreview) {
+        toast.success(`SMTP issue detected. Use OTP: ${response.otpPreview}`);
+      } else {
+        toast.success("OTP resent");
+      }
     } catch (error) {
       toast.error(getErrorMessage(error, "Unable to resend OTP right now"));
     }
