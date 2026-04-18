@@ -52,7 +52,7 @@ export default function ConsumerLayout() {
                   `whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition ${
                     isActive
                       ? "bg-accent text-white"
-                      : "text-text/80 hover:bg-white/10 hover:text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`
                 }
               >

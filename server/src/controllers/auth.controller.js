@@ -14,6 +14,26 @@ import RefreshToken from "../models/RefreshToken.model.js";
 
 const OTP_EXPIRES_MS = 10 * 60 * 1000; // 10 minutes
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const DEFAULT_ADMIN_EMAILS = [
+  "bishtmanish916@gmail.com",
+];
+
+function normalizeEmail(email = "") {
+  return String(email).trim().toLowerCase();
+}
+
+function getAdminEmailAllowList() {
+  const configured = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((entry) => normalizeEmail(entry))
+    .filter(Boolean);
+
+  return new Set([...DEFAULT_ADMIN_EMAILS.map(normalizeEmail), ...configured]);
+}
+
+function isAdminEmail(email) {
+  return getAdminEmailAllowList().has(normalizeEmail(email));
+}
 
 async function issueVerificationOtp(user) {
   await OtpCode.updateMany(
@@ -53,9 +73,12 @@ async function issueTokensForUser(user) {
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
+  const normalizedEmail = normalizeEmail(email);
+  const forcedAdmin = isAdminEmail(normalizedEmail);
+  const safeRole = forcedAdmin ? "admin" : role;
 
-  const existing = await User.findOne({ email });
-  if (role === "admin") {
+  const existing = await User.findOne({ email: normalizedEmail });
+  if (safeRole === "admin" && !forcedAdmin) {
     throw new ApiError(400, "Invalid role for signup");
   }
 
@@ -67,7 +90,8 @@ export const register = asyncHandler(async (req, res) => {
   if (existing && !existing.isVerified) {
     existing.name = name;
     existing.passwordHash = passwordHash;
-    existing.role = role;
+    existing.role = safeRole;
+    existing.email = normalizedEmail;
     existing.isActive = true;
     existing.isBanned = false;
     await existing.save();
@@ -82,9 +106,9 @@ export const register = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     passwordHash,
-    role,
+    role: safeRole,
     isVerified: false,
     isActive: true,
   });
@@ -99,12 +123,13 @@ export const register = asyncHandler(async (req, res) => {
 
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) throw new ApiError(404, "User not found");
 
   const otpDoc = await OtpCode.findOne({
-    email,
+    email: normalizedEmail,
     purpose: "verify_email",
     usedAt: null,
     expiresAt: { $gt: new Date() },
@@ -120,6 +145,9 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   await otpDoc.save();
 
   user.isVerified = true;
+  if (isAdminEmail(user.email)) {
+    user.role = "admin";
+  }
   await user.save();
 
   const tokens = await issueTokensForUser(user);
@@ -131,8 +159,9 @@ export const verifyOtp = asyncHandler(async (req, res) => {
 
 export const resendOtp = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     // Don’t reveal whether email exists
     return res.status(200).json({ message: "If registered, OTP will be sent" });
@@ -152,8 +181,9 @@ export const resendOtp = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user || !user.isActive) {
     throw new ApiError(401, "Invalid email or password");
   }
@@ -166,6 +196,11 @@ export const login = asyncHandler(async (req, res) => {
 
   const isMatch = await bcrypt.compare(password, user.passwordHash);
   if (!isMatch) throw new ApiError(401, "Invalid email or password");
+
+  if (isAdminEmail(user.email) && user.role !== "admin") {
+    user.role = "admin";
+    await user.save();
+  }
 
   const tokens = await issueTokensForUser(user);
   return res.status(200).json({ message: "Login successful", ...tokens });
@@ -247,8 +282,9 @@ export const logout = asyncHandler(async (req, res) => {
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   // Don’t reveal whether the user exists.
   if (!user) {
     return res.status(200).json({ message: "If account exists, OTP sent" });
@@ -257,13 +293,13 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   const { code, codeHash } = await createOtpCode();
 
   await OtpCode.updateMany(
-    { email, purpose: "forgot_password", usedAt: null },
+    { email: normalizedEmail, purpose: "forgot_password", usedAt: null },
     { usedAt: new Date() }
   );
 
   await OtpCode.create({
     userId: user._id,
-    email: user.email,
+    email: normalizedEmail,
     purpose: "forgot_password",
     codeHash,
     expiresAt: new Date(Date.now() + OTP_EXPIRES_MS),
@@ -279,12 +315,13 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
 export const resetPassword = asyncHandler(async (req, res) => {
   const { email, otp, newPassword } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) throw new ApiError(400, "Invalid OTP or email");
 
   const otpDoc = await OtpCode.findOne({
-    email,
+    email: normalizedEmail,
     purpose: "forgot_password",
     usedAt: null,
     expiresAt: { $gt: new Date() },

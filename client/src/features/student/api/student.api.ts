@@ -22,6 +22,21 @@ export async function getStudentProfile() {
   return data;
 }
 
+export async function updateStudentProfile(payload: {
+  bio: string;
+  skills: string[];
+  course: string;
+  university: string;
+  year: string;
+  semester: string;
+  portfolioLinks: string[];
+  resumeUrl?: string;
+  isAvailable?: boolean;
+}) {
+  const { data } = await api.put<{ user: unknown; profile: StudentProfile }>("/users/me", payload);
+  return data;
+}
+
 export async function listOpenJobs(params?: {
   category?: string;
   minBudget?: number;

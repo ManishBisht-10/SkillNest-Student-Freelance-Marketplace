@@ -5,11 +5,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#1A1A2E",
-        accent: "#E94560",
-        secondary: "#16213E",
-        surface: "#0F3460",
-        text: "#EAEAEA"
+        primary: "#F5F7FB",
+        accent: "#2563EB",
+        secondary: "#FFFFFF",
+        surface: "#E8EEF8",
+        text: "#0F172A"
       },
       fontFamily: {
         heading: ["\"Plus Jakarta Sans\"", "system-ui", "sans-serif"],

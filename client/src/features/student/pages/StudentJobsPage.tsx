@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -15,25 +15,51 @@ export default function StudentJobsPage() {
   const [category, setCategory] = useState("");
   const [skills, setSkills] = useState("");
   const [search, setSearch] = useState("");
+  const categoryRef = useRef(category);
+  const skillsRef = useRef(skills);
 
-  const loadJobs = async () => {
-    setLoading(true);
+  categoryRef.current = category;
+  skillsRef.current = skills;
+
+  const loadJobs = async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true);
+    }
+
     try {
       const response = await listOpenJobs({
-        category: category.trim() || undefined,
-        skills: skills.trim() || undefined,
+        category: categoryRef.current.trim() || undefined,
+        skills: skillsRef.current.trim() || undefined,
         limit: 40,
       });
       setJobs(response.items);
     } catch {
-      toast.error("Failed to load jobs");
+      if (!silent) {
+        toast.error("Failed to load jobs");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadJobs();
+    let isMounted = true;
+
+    const refresh = async (silent = false) => {
+      if (!isMounted) return;
+      await loadJobs({ silent });
+    };
+
+    refresh(false);
+
+    const refreshInterval = window.setInterval(() => {
+      refresh(true);
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshInterval);
+    };
   }, []);
 
   const visibleJobs = useMemo(() => {
@@ -50,9 +76,9 @@ export default function StudentJobsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
-        <h1 className="font-heading text-3xl font-bold">Browse Jobs</h1>
-        <p className="mt-1 text-sm text-text/70">Find open projects that match your skills.</p>
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
+        <h1 className="font-heading text-3xl font-bold text-white">Browse Jobs</h1>
+        <p className="mt-1 text-sm text-white/75">Find open projects that match your skills.</p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           <Input label="Search" placeholder="Design, React, API..." value={search} onChange={(e) => setSearch(e.target.value)} />

@@ -9,6 +9,13 @@ import { getErrorMessage } from "../../../shared/utils/errors";
 import { resendOtpThunk, selectAuth, setPendingOtpEmail, verifyOtpThunk } from "../authSlice";
 import AuthShell from "../components/AuthShell";
 
+function getPostLoginPath(role?: string) {
+  if (role === "student") return "/student/dashboard";
+  if (role === "consumer") return "/consumer/dashboard";
+  if (role === "admin") return "/admin/dashboard";
+  return "/";
+}
+
 export default function VerifyOtpPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -23,14 +30,14 @@ export default function VerifyOtpPage() {
     event.preventDefault();
 
     try {
-      await dispatch(
+      const response = await dispatch(
         verifyOtpThunk({
           email: email.trim().toLowerCase(),
           otp,
         })
       ).unwrap();
       toast.success("Email verified successfully");
-      navigate("/");
+      navigate(getPostLoginPath((response.user as { role?: string })?.role), { replace: true });
     } catch (error) {
       toast.error(getErrorMessage(error, "Invalid or expired OTP"));
     }

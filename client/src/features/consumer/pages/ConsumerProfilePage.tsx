@@ -57,9 +57,9 @@ export default function ConsumerProfilePage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
-        <h1 className="font-heading text-3xl font-bold">Consumer Profile</h1>
-        <p className="mt-1 text-sm text-text/70">Update your account and company information.</p>
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
+        <h1 className="font-heading text-3xl font-bold text-white">Consumer Profile</h1>
+        <p className="mt-1 text-sm text-white/75">Update your account and company information.</p>
       </section>
 
       <form className="grid gap-3 rounded-2xl border border-secondary/70 bg-secondary/20 p-5" onSubmit={onSave}>

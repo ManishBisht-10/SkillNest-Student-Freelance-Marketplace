@@ -7,6 +7,7 @@ import {
   listUsers,
   banUser,
   activateUser,
+  deleteUser,
   listAllJobs,
   deleteJob,
   listAllContracts,
@@ -15,6 +16,7 @@ import {
   listTransactions,
   listAllReviews,
   deleteReview,
+  listStudentProfiles,
 } from "../controllers/admin.controller.js";
 
 import {
@@ -50,6 +52,7 @@ router.put(
   validateRequest,
   activateUser
 );
+router.delete("/users/:id", userIdParamValidator, validateRequest, deleteUser);
 
 router.get("/jobs", listAllJobs);
 router.delete("/jobs/:id", jobIdParamValidator, validateRequest, deleteJob);
@@ -73,5 +76,6 @@ router.get(
 
 router.get("/reviews", listAllReviews);
 router.delete("/reviews/:id", reviewIdParamValidator, validateRequest, deleteReview);
+router.get("/student-profiles", listStudentProfiles);
 
 export default router;

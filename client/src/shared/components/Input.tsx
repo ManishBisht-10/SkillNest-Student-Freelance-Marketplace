@@ -10,21 +10,21 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export default function Input({ label, hint, error, className, ...props }: InputProps) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-sm font-medium text-text/90">{label}</span>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
       <input
         className={clsx(
-          "h-11 rounded-xl border bg-white/5 px-3 text-sm text-white placeholder:text-text/40 outline-none transition",
+          "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition",
           error
-            ? "border-red-400 focus:border-red-300"
-            : "border-secondary/80 focus:border-accent",
+            ? "border-red-300 focus:border-red-400"
+            : "focus:border-accent",
           className
         )}
         {...props}
       />
       {error ? (
-        <span className="text-xs text-red-300">{error}</span>
+        <span className="text-xs text-red-600">{error}</span>
       ) : hint ? (
-        <span className="text-xs text-text/60">{hint}</span>
+        <span className="text-xs text-slate-500">{hint}</span>
       ) : null}
     </label>
   );

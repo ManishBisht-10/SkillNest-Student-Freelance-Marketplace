@@ -71,8 +71,8 @@ export const verifyOtpThunk = createAsyncThunk(
   async (payload: VerifyOtpInput, { dispatch }) => {
     const response = await verifyOtp(payload);
     setAuthTokens(response);
-    await dispatch(fetchMeThunk());
-    return response;
+    const user = await dispatch(fetchMeThunk()).unwrap();
+    return { ...response, user };
   }
 );
 
@@ -89,8 +89,8 @@ export const loginThunk = createAsyncThunk(
   async (payload: LoginInput, { dispatch }) => {
     const response = await login(payload);
     setAuthTokens(response);
-    await dispatch(fetchMeThunk());
-    return response;
+    const user = await dispatch(fetchMeThunk()).unwrap();
+    return { ...response, user };
   }
 );
 
@@ -157,8 +157,10 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyOtpThunk.fulfilled, (state) => {
+      .addCase(verifyOtpThunk.fulfilled, (state, action) => {
         state.loading = false;
+        state.initialized = true;
+        state.user = action.payload.user as AuthUser;
         state.isAuthenticated = true;
         state.pendingOtpEmail = "";
       })
@@ -170,9 +172,11 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginThunk.fulfilled, (state) => {
+      .addCase(loginThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
+        state.initialized = true;
+        state.user = action.payload.user as AuthUser;
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -210,7 +214,10 @@ export const initializeAuth = () => async (dispatch: AppDispatch) => {
     dispatch(markAuthInitialized());
     return;
   }
-  await dispatch(fetchMeThunk());
+  const result = await dispatch(fetchMeThunk());
+  if (fetchMeThunk.rejected.match(result)) {
+    clearTokens();
+  }
 };
 
 export default authSlice.reducer;

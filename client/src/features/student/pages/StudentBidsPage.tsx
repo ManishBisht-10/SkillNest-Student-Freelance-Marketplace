@@ -35,9 +35,9 @@ export default function StudentBidsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
-        <h1 className="font-heading text-3xl font-bold">My Bids</h1>
-        <p className="mt-1 text-sm text-text/70">Track all your proposals and their status.</p>
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
+        <h1 className="font-heading text-3xl font-bold text-white">My Bids</h1>
+        <p className="mt-1 text-sm text-white/75">Track all your proposals and their status.</p>
       </section>
 
       {bids.length === 0 ? (

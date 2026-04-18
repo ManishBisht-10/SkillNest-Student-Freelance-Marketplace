@@ -2,8 +2,10 @@ export interface StudentProfile {
   userId: string;
   bio: string;
   skills: string[];
+  course: string;
   university: string;
   year: string;
+  semester: string;
   portfolioLinks: string[];
   rating: number;
   totalEarnings: number;

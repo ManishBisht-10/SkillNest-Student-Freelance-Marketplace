@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -18,23 +18,32 @@ export default function ConsumerPostJobPage() {
   const [deadline, setDeadline] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = useMemo(() => {
+  const validateForm = () => {
+    const errors: string[] = [];
     const min = Number(budgetMin);
     const max = Number(budgetMax);
-    return (
-      title.trim().length >= 4 &&
-      description.trim().length >= 10 &&
-      category.trim().length >= 2 &&
-      min > 0 &&
-      max > 0 &&
-      min <= max &&
-      Boolean(deadline)
-    );
-  }, [title, description, category, budgetMin, budgetMax, deadline]);
+
+    if (title.trim().length < 4) errors.push("Title is required");
+    if (description.trim().length < 10) errors.push("Description is required");
+    if (category.trim().length < 2) errors.push("Category is required");
+    if (!Number.isFinite(min) || min <= 0) errors.push("Budget min must be greater than zero");
+    if (!Number.isFinite(max) || max <= 0) errors.push("Budget max must be greater than zero");
+    if (Number.isFinite(min) && Number.isFinite(max) && min > max) {
+      errors.push("Budget min must be less than or equal to budget max");
+    }
+    if (!deadline) errors.push("Deadline is required");
+
+    return errors;
+  };
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canSubmit) return;
+
+    const errors = validateForm();
+    if (errors.length > 0) {
+      toast.error(errors[0]);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -52,7 +61,8 @@ export default function ConsumerPostJobPage() {
       });
       toast.success("Job posted successfully");
       navigate("/consumer/jobs");
-    } catch {
+    } catch (error) {
+      console.error("Unable to post job", error);
       toast.error("Unable to post job");
     } finally {
       setSubmitting(false);
@@ -61,12 +71,13 @@ export default function ConsumerPostJobPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
-        <h1 className="font-heading text-3xl font-bold">Post a New Job</h1>
-        <p className="mt-1 text-sm text-text/70">Describe your requirement and invite bids from students.</p>
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Consumer Workspace</p>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-white">Post a New Job</h1>
+        <p className="mt-1 text-sm text-text/75">Describe your requirement and invite bids from students.</p>
       </section>
 
-      <form className="grid gap-3 rounded-2xl border border-secondary/70 bg-secondary/20 p-5" onSubmit={onSubmit}>
+      <form className="grid gap-3 rounded-3xl border border-secondary/70 bg-secondary/20 p-5 md:p-6" onSubmit={onSubmit}>
         <Input label="Title" placeholder="Build my portfolio website" value={title} onChange={(e) => setTitle(e.target.value)} />
 
         <label className="grid gap-1.5">
@@ -90,7 +101,7 @@ export default function ConsumerPostJobPage() {
           <Input label="Deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </div>
 
-        <Button type="submit" disabled={!canSubmit || submitting}>
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Posting..." : "Post Job"}
         </Button>
       </form>

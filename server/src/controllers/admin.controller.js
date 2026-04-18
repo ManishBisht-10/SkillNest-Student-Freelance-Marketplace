@@ -5,7 +5,14 @@ import Job from "../models/Job.model.js";
 import Contract from "../models/Contract.model.js";
 import Transaction from "../models/Transaction.model.js";
 import Review from "../models/Review.model.js";
-import { recalculateRevieweeRating } from "../utils/reviewRating.js";
+import StudentProfile from "../models/StudentProfile.model.js";
+import ConsumerProfile from "../models/ConsumerProfile.model.js";
+import Bid from "../models/Bid.model.js";
+import ChatRoom from "../models/ChatRoom.model.js";
+import Message from "../models/Message.model.js";
+import Notification from "../models/Notification.model.js";
+import OtpCode from "../models/OtpCode.model.js";
+import RefreshToken from "../models/RefreshToken.model.js";
 import { netAmountAfterPlatformFee } from "../services/payments.service.js";
 
 function startOfToday() {
@@ -141,6 +148,61 @@ export const activateUser = asyncHandler(async (req, res) => {
   });
 });
 
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (String(id) === String(req.user.id)) {
+    throw new ApiError(400, "Cannot remove your own account");
+  }
+
+  const existing = await User.findById(id).select("role");
+  if (!existing) throw new ApiError(404, "User not found");
+  if (existing.role === "admin") {
+    throw new ApiError(400, "Cannot remove an admin account");
+  }
+
+  const [postedJobs, assignedJobs] = await Promise.all([
+    Job.find({ postedBy: id }).select("_id"),
+    Job.find({ assignedTo: id }).select("_id"),
+  ]);
+
+  const postedJobIds = postedJobs.map((job) => job._id);
+  const assignedJobIds = assignedJobs.map((job) => job._id);
+  const relatedJobIds = Array.from(new Set([...postedJobIds, ...assignedJobIds].map(String)));
+
+  const contracts = await Contract.find({
+    $or: [{ studentId: id }, { consumerId: id }, { jobId: { $in: relatedJobIds } }],
+  }).select("_id");
+  const contractIds = contracts.map((contract) => contract._id);
+
+  const chatRooms = await ChatRoom.find({ participants: id }).select("_id");
+  const chatRoomIds = chatRooms.map((room) => room._id);
+
+  await Promise.all([
+    Review.deleteMany({ revieweeId: id }),
+    Review.deleteMany({ reviewerId: id }),
+  ]);
+
+  await Promise.all([
+    StudentProfile.deleteMany({ userId: id }),
+    ConsumerProfile.deleteMany({ userId: id }),
+    Bid.deleteMany({ $or: [{ studentId: id }, { jobId: { $in: relatedJobIds } }] }),
+    Transaction.deleteMany({ contractId: { $in: contractIds } }),
+    Contract.deleteMany({ _id: { $in: contractIds } }),
+    Job.deleteMany({ $or: [{ postedBy: id }, { assignedTo: id }] }),
+    Notification.deleteMany({ userId: id }),
+    OtpCode.deleteMany({ userId: id }),
+    RefreshToken.deleteMany({ userId: id }),
+    Message.deleteMany({ chatRoomId: { $in: chatRoomIds } }),
+    ChatRoom.deleteMany({ _id: { $in: chatRoomIds } }),
+  ]);
+
+  const removed = await User.findByIdAndDelete(id).select("-passwordHash");
+  if (!removed) throw new ApiError(404, "User not found");
+
+  return res.status(200).json({ message: "User removed", user: removed });
+});
+
 export const listAllJobs = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = {};
@@ -259,6 +321,18 @@ export const listAllReviews = asyncHandler(async (req, res) => {
     .limit(500);
 
   return res.status(200).json(reviews);
+});
+
+export const listStudentProfiles = asyncHandler(async (req, res) => {
+  const profiles = await StudentProfile.find()
+    .sort({ updatedAt: -1 })
+    .populate(
+      "userId",
+      "name email role isVerified isActive isBanned"
+    )
+    .limit(500);
+
+  return res.status(200).json(profiles);
 });
 
 export const deleteReview = asyncHandler(async (req, res) => {

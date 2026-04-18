@@ -4,6 +4,7 @@ import type {
   AdminDashboardStats,
   AdminJob,
   AdminReview,
+  AdminStudentProfile,
   AdminTransaction,
   AdminUser,
 } from "../types/admin";
@@ -33,6 +34,11 @@ export async function setUserActive(userId: string, active: boolean) {
   const { data } = await api.put<{ message: string; user: AdminUser }>(`/admin/users/${userId}/activate`, {
     active,
   });
+  return data;
+}
+
+export async function deleteAdminUser(userId: string) {
+  const { data } = await api.delete<{ message: string; user: AdminUser }>(`/admin/users/${userId}`);
   return data;
 }
 
@@ -83,5 +89,10 @@ export async function listAdminReviews() {
 
 export async function deleteAdminReview(reviewId: string) {
   const { data } = await api.delete<{ message: string; id: string }>(`/admin/reviews/${reviewId}`);
+  return data;
+}
+
+export async function listAdminStudentProfiles() {
+  const { data } = await api.get<AdminStudentProfile[]>("/admin/student-profiles");
   return data;
 }

@@ -106,3 +106,31 @@ export interface AdminReview {
   role: "student" | "consumer";
   createdAt: string;
 }
+
+export interface AdminStudentProfile {
+  _id: string;
+  userId:
+    | string
+    | {
+        _id: string;
+        name: string;
+        email: string;
+        role: string;
+        isVerified: boolean;
+        isActive: boolean;
+        isBanned: boolean;
+      };
+  bio: string;
+  skills: string[];
+  course: string;
+  university: string;
+  year: string;
+  semester: string;
+  portfolioLinks: string[];
+  rating: number;
+  totalEarnings: number;
+  completedJobs: number;
+  resumeUrl: string;
+  isAvailable: boolean;
+  updatedAt: string;
+}

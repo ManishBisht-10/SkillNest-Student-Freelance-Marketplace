@@ -7,6 +7,7 @@ import {
   getMe,
   updateMe,
   uploadMeAvatar,
+  getPlatformStats,
   getStudentPublicProfile,
   getConsumerPublicProfile,
 } from "../controllers/users.controller.js";
@@ -26,6 +27,8 @@ router.post(
   uploadAvatar.single("avatar"),
   uploadMeAvatar
 );
+
+router.get("/platform-stats", getPlatformStats);
 
 router.get(
   "/student/:id",

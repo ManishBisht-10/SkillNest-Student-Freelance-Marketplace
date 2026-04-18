@@ -92,9 +92,9 @@ export default function ConsumerJobDetailsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
         <h1 className="font-heading text-3xl font-bold text-white">{job.title}</h1>
-        <p className="mt-2 text-sm text-text/80">{job.description}</p>
+        <p className="mt-2 text-sm text-white/75">{job.description}</p>
         <p className="mt-3 text-sm text-text/70">
           Budget ₹{job.budgetMin.toLocaleString("en-IN")} - ₹{job.budgetMax.toLocaleString("en-IN")} • Status {job.status}
         </p>

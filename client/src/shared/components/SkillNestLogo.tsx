@@ -19,7 +19,7 @@ export default function SkillNestLogo({
       className={`group inline-flex items-center gap-2 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
       aria-label="SkillNest home"
     >
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-accent/60 bg-accent/15 text-accent transition group-hover:scale-105 group-hover:bg-accent/20">
+      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-accent/15 bg-accent/10 text-accent transition group-hover:scale-105 group-hover:bg-accent/15">
         <svg
           viewBox="0 0 24 24"
           width="18"
@@ -48,7 +48,7 @@ export default function SkillNestLogo({
           />
         </svg>
       </span>
-      <span className="font-heading text-xl font-bold tracking-tight text-white">{label}</span>
+      <span className="font-heading text-xl font-bold tracking-tight text-slate-900">{label}</span>
     </Link>
   );
 }

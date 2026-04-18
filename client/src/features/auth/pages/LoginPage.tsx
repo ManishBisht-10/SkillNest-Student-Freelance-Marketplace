@@ -3,11 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
+import { clearTokens } from "../../../app/storage";
 import Button from "../../../shared/components/Button";
 import Input from "../../../shared/components/Input";
 import { getErrorMessage } from "../../../shared/utils/errors";
 import { loginThunk, selectAuth } from "../authSlice";
 import AuthShell from "../components/AuthShell";
+
+function getPostLoginPath(role?: string) {
+  if (role === "student") return "/student/dashboard";
+  if (role === "consumer") return "/consumer/dashboard";
+  if (role === "admin") return "/admin/dashboard";
+  return "/";
+}
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -23,7 +31,8 @@ export default function LoginPage() {
     event.preventDefault();
 
     try {
-      await dispatch(
+      clearTokens();
+      const response = await dispatch(
         loginThunk({
           email: email.trim().toLowerCase(),
           password,
@@ -31,7 +40,7 @@ export default function LoginPage() {
       ).unwrap();
 
       toast.success("Welcome back");
-      navigate("/");
+      navigate(getPostLoginPath((response.user as { role?: string })?.role), { replace: true });
     } catch (error) {
       toast.error(getErrorMessage(error, "Invalid email or password"));
     }

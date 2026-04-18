@@ -78,10 +78,10 @@ export default function StudentJobDetailsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-secondary/70 bg-secondary/20 p-5">
-        <p className="text-xs uppercase tracking-wide text-accent">{job.category}</p>
+      <section className="overflow-hidden rounded-3xl border border-secondary/70 bg-[linear-gradient(140deg,rgba(233,69,96,0.16),rgba(15,52,96,0.68))] p-5">
+        <p className="text-xs uppercase tracking-wide text-white">{job.category}</p>
         <h1 className="mt-1 font-heading text-3xl font-bold text-white">{job.title}</h1>
-        <p className="mt-3 whitespace-pre-wrap text-sm text-text/80">{job.description}</p>
+        <p className="mt-3 whitespace-pre-wrap text-sm text-white/75">{job.description}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {job.skillsRequired.map((skill) => (

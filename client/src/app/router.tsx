@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
@@ -13,6 +14,9 @@ import StudentJobDetailsPage from "../features/student/pages/StudentJobDetailsPa
 import StudentBidsPage from "../features/student/pages/StudentBidsPage";
 import StudentContractsPage from "../features/student/pages/StudentContractsPage";
 import StudentChatPage from "../features/student/pages/StudentChatPage";
+import StudentOnboardingPage from "../features/student/pages/StudentOnboardingPage";
+import { getStudentProfile } from "../features/student/api/student.api";
+import type { StudentProfile } from "../features/student/types/student";
 import ConsumerLayout from "../features/consumer/components/ConsumerLayout";
 import ConsumerDashboardPage from "../features/consumer/pages/ConsumerDashboardPage";
 import ConsumerPostJobPage from "../features/consumer/pages/ConsumerPostJobPage";
@@ -29,6 +33,7 @@ import AdminContractsPage from "../features/admin/pages/AdminContractsPage";
 import AdminDisputesPage from "../features/admin/pages/AdminDisputesPage";
 import AdminTransactionsPage from "../features/admin/pages/AdminTransactionsPage";
 import AdminReviewsPage from "../features/admin/pages/AdminReviewsPage";
+import AdminDatabaseExplorerPage from "../features/admin/pages/AdminDatabaseExplorerPage";
 import LandingPage from "../features/landing/pages/LandingPage";
 import { useAppSelector } from "./hooks";
 import { selectAuth } from "../features/auth/authSlice";
@@ -58,6 +63,61 @@ function RoleRoute({ role, children }: { role: "student" | "consumer" | "admin";
   return children;
 }
 
+function isStudentProfileComplete(profile: StudentProfile | null) {
+  if (!profile) return false;
+
+  const hasBio = Boolean(profile.bio?.trim());
+  const hasCourse = Boolean(profile.course?.trim());
+  const hasUniversity = Boolean(profile.university?.trim());
+  const hasYear = Boolean(profile.year?.trim());
+  const hasSemester = Boolean(profile.semester?.trim());
+  const hasSkills = Array.isArray(profile.skills) && profile.skills.length > 0;
+
+  return hasBio && hasCourse && hasUniversity && hasYear && hasSemester && hasSkills;
+}
+
+function StudentOnboardingGate({ children }: { children: ReactElement }) {
+  const location = useLocation();
+  const [checking, setChecking] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setChecking(true);
+      try {
+        const response = await getStudentProfile();
+        setNeedsOnboarding(!isStudentProfileComplete(response.profile));
+      } catch {
+        setNeedsOnboarding(false);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    load();
+  }, [location.pathname]);
+
+  if (checking) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-primary text-text">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
+    );
+  }
+
+  const onOnboardingPage = location.pathname.startsWith("/student/onboarding");
+
+  if (needsOnboarding && !onOnboardingPage) {
+    return <Navigate to="/student/onboarding" replace />;
+  }
+
+  if (!needsOnboarding && onOnboardingPage) {
+    return <Navigate to="/student/dashboard" replace />;
+  }
+
+  return children;
+}
+
 export default function AppRouter() {
   return (
     <Routes>
@@ -73,11 +133,14 @@ export default function AppRouter() {
         element={
           <AuthOnlyRoute>
             <RoleRoute role="student">
-              <StudentLayout />
+              <StudentOnboardingGate>
+                <StudentLayout />
+              </StudentOnboardingGate>
             </RoleRoute>
           </AuthOnlyRoute>
         }
       >
+        <Route path="onboarding" element={<StudentOnboardingPage />} />
         <Route path="dashboard" element={<StudentDashboardPage />} />
         <Route path="jobs" element={<StudentJobsPage />} />
         <Route path="jobs/:id" element={<StudentJobDetailsPage />} />
@@ -124,6 +187,7 @@ export default function AppRouter() {
         <Route path="disputes" element={<AdminDisputesPage />} />
         <Route path="transactions" element={<AdminTransactionsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
+        <Route path="database" element={<AdminDatabaseExplorerPage />} />
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 

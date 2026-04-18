@@ -2,6 +2,8 @@ import ApiError from "../utils/ApiError.js";
 import User from "../models/User.model.js";
 import StudentProfile from "../models/StudentProfile.model.js";
 import ConsumerProfile from "../models/ConsumerProfile.model.js";
+import Contract from "../models/Contract.model.js";
+import Transaction from "../models/Transaction.model.js";
 import { uploadAvatar } from "../services/cloudinary.service.js";
 
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -55,8 +57,10 @@ export const updateMe = asyncHandler(async (req, res) => {
     const update = {};
     if (req.body.bio != null) update.bio = req.body.bio;
     if (req.body.skills != null) update.skills = normalizeStringList(req.body.skills) || [];
+    if (req.body.course != null) update.course = req.body.course;
     if (req.body.university != null) update.university = req.body.university;
     if (req.body.year != null) update.year = req.body.year;
+    if (req.body.semester != null) update.semester = req.body.semester;
     if (req.body.portfolioLinks != null)
       update.portfolioLinks = normalizeStringList(req.body.portfolioLinks) || [];
     if (req.body.resumeUrl != null) update.resumeUrl = req.body.resumeUrl;
@@ -137,5 +141,57 @@ export const getConsumerPublicProfile = asyncHandler(async (req, res) => {
   if (!profile) return res.status(200).json({ user, profile: null });
 
   return res.status(200).json({ user, profile });
+});
+
+export const getPlatformStats = asyncHandler(async (req, res) => {
+  const [studentsBuildingPortfolios, projectsCompleted, paidToStudentsAgg, topProfiles] =
+    await Promise.all([
+      User.countDocuments({
+        role: "student",
+        isActive: true,
+        isBanned: false,
+        isVerified: true,
+      }),
+      Contract.countDocuments({ status: "completed" }),
+      Transaction.aggregate([
+        { $match: { type: "release", status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]),
+      StudentProfile.find()
+        .sort({ rating: -1, completedJobs: -1, totalEarnings: -1 })
+        .limit(6)
+        .populate({
+          path: "userId",
+          select: "name",
+          match: {
+            role: "student",
+            isActive: true,
+            isBanned: false,
+            isVerified: true,
+          },
+        }),
+    ]);
+
+  const paidToStudents = paidToStudentsAgg[0]?.total ?? 0;
+
+  const topStudents = topProfiles
+    .filter((profile) => Boolean(profile.userId))
+    .map((profile) => ({
+      id: profile._id,
+      name: profile.userId.name,
+      skill: profile.skills?.[0] || "Student Talent",
+      university: profile.university || "SkillNest",
+      rating: Number(profile.rating || 0),
+      projects: Number(profile.completedJobs || 0),
+      earnings: Number(profile.totalEarnings || 0),
+    }));
+
+  return res.status(200).json({
+    studentsBuildingPortfolios,
+    projectsCompleted,
+    paidToStudents,
+    topStudents,
+    updatedAt: new Date().toISOString(),
+  });
 });
 

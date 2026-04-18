@@ -20,11 +20,11 @@ export default function Button({
       className={clsx(
         "inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
         {
-          "bg-accent text-white shadow-lg shadow-accent/30 hover:bg-accent/90":
+          "bg-accent text-white shadow-lg shadow-accent/25 hover:bg-accent/90":
             variant === "primary",
-          "border border-secondary bg-secondary/30 text-text hover:bg-secondary/50":
+          "border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50":
             variant === "secondary",
-          "text-text/80 hover:bg-white/10 hover:text-white": variant === "ghost",
+          "text-slate-600 hover:bg-slate-100 hover:text-slate-900": variant === "ghost",
           "w-full": fullWidth,
         },
         className
